@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  role      Role
+  createdAt DateTime @default(now())
+  prs       PR[]
+  tasks     Task[]
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  meetings    Meeting[]
+  tasks       Task[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  status      String    @default("To-Do")
+  projectId   Int
+  meetingId   Int?
+  assignedTo  Int?
+  createdAt   DateTime  @default(now())
+  pr          PR[]
+  employee    Employee? @relation(fields: [assignedTo], references: [id])
+  meeting     Meeting?  @relation(fields: [meetingId], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id])
+}
+
+model PR {
+  id        Int      @id @default(autoincrement())
+  url       String
+  status    String   @default("open")
+  taskId    Int
+  authorId  Int
+  createdAt DateTime @default(now())
+  employee  Employee @relation(fields: [authorId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id])
+}
+
+model Meeting {
+  id         Int          @id @default(autoincrement())
+  title      String
+  projectId  Int
+  notes      String?
+  createdAt  DateTime     @default(now())
+  llmOutputs LLM_Output[]
+  project    Project      @relation(fields: [projectId], references: [id])
+  tasks      Task[]
+}
+
+model LLM_Output {
+  id        Int      @id @default(autoincrement())
+  meetingId Int
+  jsonData  Json
+  createdAt DateTime @default(now())
+  meeting   Meeting  @relation(fields: [meetingId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+  INTERN
+}
