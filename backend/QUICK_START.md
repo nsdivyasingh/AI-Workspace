@@ -100,3 +100,4 @@ Headers:
 - Check user's role in database
 - Verify role names match: `admin`, `manager`, `developer`, `intern`
 
+

@@ -137,3 +137,4 @@ To fully migrate to Supabase Auth, you'll need to:
 
 **Note:** The SQL scripts use `developer` instead of `employee` to match common naming conventions. Update if needed.
 
+
