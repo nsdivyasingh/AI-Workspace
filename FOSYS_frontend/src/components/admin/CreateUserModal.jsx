@@ -3,7 +3,7 @@ import { createUser } from '../../services/userService'; // Adjust path as neede
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// Assume you have a Modal/Dialog component available, otherwise use a simple div
+
 // import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const CreateUserModal = ({ onClose, onUserCreated }) => {

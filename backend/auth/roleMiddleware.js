@@ -43,21 +43,50 @@ export const authorizeRoles = (allowedRoles = []) => {
 
       const userId = data.user.id;
 
-      // Fetch role from user_roles_view
+      // Try to get role from user_roles_view first (Supabase RBAC)
+      let userRole = null;
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles_view")
         .select("role_name")
         .eq("user_id", userId)
         .single();
 
-      if (roleError || !roleData) {
-        return res.status(403).json({ 
-          error: "User role not found",
-          details: roleError?.message || "No role assigned to user"
-        });
+      if (roleData && !roleError) {
+        userRole = roleData.role_name.toLowerCase();
+      } else {
+        // Fallback: Get role from Employee table if user_roles_view fails
+        const { PrismaClient } = await import("@prisma/client");
+        const prisma = new PrismaClient();
+        
+        try {
+          const employee = await prisma.employee.findUnique({
+            where: { supabase_user_id: userId },
+            select: { role: true }
+          });
+
+          if (employee) {
+            // Map Employee role enum to role name
+            const roleMap = {
+              'ADMIN': 'admin',
+              'MANAGER': 'manager',
+              'EMPLOYEE': 'developer',
+              'INTERN': 'intern'
+            };
+            userRole = roleMap[employee.role] || employee.role.toLowerCase();
+          }
+        } catch (err) {
+          console.error('Error fetching employee role:', err);
+        } finally {
+          await prisma.$disconnect();
+        }
       }
 
-      const userRole = roleData.role_name.toLowerCase();
+      if (!userRole) {
+        return res.status(403).json({ 
+          error: "User role not found",
+          details: "No role assigned to user in either user_roles or Employee table"
+        });
+      }
 
       // Check if user role is in allowed roles (case-insensitive comparison)
       const allowedRolesLower = allowedRoles.map(role => role.toLowerCase());
